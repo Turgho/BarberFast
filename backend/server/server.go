@@ -2,42 +2,35 @@ package server
 
 import (
 	"fmt"
-	"os"
-	"strings"
 
+	"github.com/Turgho/barberfast/backend/handlers"
+	"github.com/Turgho/barberfast/backend/migration"
+	"github.com/Turgho/barberfast/backend/models/repositories"
 	"github.com/Turgho/barberfast/backend/models/settings"
 	"github.com/Turgho/barberfast/backend/routes"
 	"github.com/gin-gonic/gin"
 )
 
-func checkEnvVariables(vars ...string) bool {
-	for _, v := range vars {
-		if v == "" {
-			return false
-		}
-	}
-	return true
-}
-
 func InitServer() {
-	// Carrega e verifica as variável .ENV
-	clusterPassword := os.Getenv("CLUSTER_PASSWORD")
-	uri := os.Getenv("URI_STRING")
-	databaseName := os.Getenv("DATABASE_NAME")
-
-	if !checkEnvVariables(clusterPassword, uri, databaseName) {
-		fmt.Printf("erro ao carregar .ENV")
-		return
-	}
-
-	uri_string := strings.ReplaceAll(uri, "${CLUSTER_PASSWORD}", databaseName)
-
 	// Conecta ao DB
-	dbHandler, err := settings.DBConnect(uri_string, databaseName)
+	dbHandler, err := settings.DBConnect()
 	if err != nil {
 		fmt.Printf("erro ao conectar ao DB: %v", err)
 	}
 	defer dbHandler.Close()
+
+	// Inicia as migrações
+	migration.InitMigrations(dbHandler.DB)
+
+	// Inicia Repositories
+	clienteRepo := repositories.NewClientesRepository(dbHandler.DB)
+	servicoRepo := repositories.NewServicoRepository(dbHandler.DB)
+
+	// Inicia Handlers
+	handlers.InitHandlers(
+		clienteRepo,
+		servicoRepo,
+	)
 
 	// Inicia o router
 	router := gin.Default()
