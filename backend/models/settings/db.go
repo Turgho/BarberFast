@@ -1,47 +1,61 @@
 package settings
 
 import (
-	"context"
 	"fmt"
-	"time"
+	"log"
+	"os"
 
-	"go.mongodb.org/mongo-driver/mongo"
-	"go.mongodb.org/mongo-driver/mongo/options"
+	"github.com/joho/godotenv"
+	"gorm.io/driver/mysql"
+	"gorm.io/gorm"
 )
 
 type DBConnectionHandler struct {
-	DB *mongo.Database
+	DB *gorm.DB
 }
 
-func DBConnect(uri, dbName string) (*DBConnectionHandler, error) {
-	// Configuração da conexão
-	clientOptions := options.Client().ApplyURI(uri)
-
-	// Conexão com MongoDB
-	client, err := mongo.Connect(context.TODO(), clientOptions)
-	if err != nil {
-		return nil, fmt.Errorf("erro ao conectar ao mongo_db: %w", err)
+func DBConnect() (*DBConnectionHandler, error) {
+	// Carregar o arquivo .env
+	if err := godotenv.Load("../../.env"); err != nil {
+		log.Fatal("Erro ao carregar o arquivo .env: ", err)
 	}
 
-	// Verifica se foi conectado
-	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
-	defer cancel()
-	if err := client.Ping(ctx, nil); err != nil {
-		return nil, fmt.Errorf("erro ao conectar ao banco de dados: %w", err)
+	// Pegando as credenciais do .env ou configurando manualmente
+	dsn := fmt.Sprintf("%s:%s@tcp(%s)/%s?charset=utf8mb4&parseTime=True&loc=Local",
+		os.Getenv("DB_USER"),     // Usuário
+		os.Getenv("DB_PASSWORD"), // Senha
+		os.Getenv("DB_HOST"),     // Host
+		os.Getenv("DB_NAME"),     // Nome do banco de dados
+	)
+	// Abrindo conexão
+	handler, err := gorm.Open(mysql.Open(dsn), &gorm.Config{})
+	if err != nil {
+		return nil, fmt.Errorf("erro ao abrir conexão com banco de dados: %v", err)
+	}
+
+	// Conectando
+	db, err := handler.DB()
+	if err != nil {
+		return nil, fmt.Errorf("erro ao conectar ao banco de dados: %v", err)
 	}
 
 	fmt.Println("Conectado ao Banco de Dados!")
 
-	// Criar o handler com o banco de dados correto
-	handler := &DBConnectionHandler{
-		DB: client.Database(dbName),
+	// Acessando
+	if err := db.Ping(); err != nil {
+		return nil, fmt.Errorf("erro ao acessar banco de dados: %v", err)
 	}
 
-	return handler, nil
+	return &DBConnectionHandler{DB: handler}, nil
 }
 
 func (handler *DBConnectionHandler) Close() {
-	if err := handler.DB.Client().Disconnect(context.TODO()); err != nil {
-		fmt.Printf("erro ao fechar conexão com DB: %v", err)
+	db, err := handler.DB.DB()
+	if err != nil {
+		fmt.Printf("erro ao fechar e acessar banco de dados: %v", err)
+	}
+
+	if err := db.Close(); err != nil {
+		fmt.Printf("erro ao fechar conexão com banco de dados: %v", err)
 	}
 }
