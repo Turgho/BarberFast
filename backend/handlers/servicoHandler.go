@@ -2,6 +2,7 @@ package handlers
 
 import (
 	"fmt"
+	"log"
 	"net/http"
 
 	"github.com/Turgho/barberfast/backend/models/repositories"
@@ -39,6 +40,28 @@ func RegistryServico(ctx *gin.Context) {
 	})
 }
 
+func FindServicoById(ctx *gin.Context) {
+	id := ctx.DefaultQuery("id", "")
+	if id == "" {
+		ctx.JSON(http.StatusBadRequest, gin.H{
+			"error": "ID não informado",
+		})
+		return
+	}
+
+	servico, err := servicosRepo.FindServicoById(id)
+	if err != nil {
+		ctx.JSON(http.StatusNotFound, gin.H{
+			"error": err.Error(),
+		})
+		log.Fatal("erro ao achar cliente:", err)
+		return
+	}
+
+	fmt.Println("cliente encontrado!")
+	ctx.JSON(http.StatusOK, servico)
+}
+
 func ListAllServicos(ctx *gin.Context) {
 	allServico, err := servicosRepo.ListAllServicos()
 	if err != nil {
@@ -48,4 +71,24 @@ func ListAllServicos(ctx *gin.Context) {
 		return
 	}
 	ctx.JSON(http.StatusOK, allServico)
+}
+
+func DeleteServicoById(ctx *gin.Context) {
+	id := ctx.DefaultQuery("id", "")
+	if id == "" {
+		ctx.JSON(http.StatusBadRequest, gin.H{
+			"error": "ID não informado",
+		})
+		return
+	}
+
+	if err := servicosRepo.DelelteServicosById(id); err != nil {
+		ctx.JSON(http.StatusBadRequest, gin.H{
+			"error": err.Error(),
+		})
+		return
+	}
+	ctx.JSON(http.StatusOK, gin.H{
+		"message": "servico deletado!",
+	})
 }
