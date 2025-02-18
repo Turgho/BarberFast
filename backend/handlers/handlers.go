@@ -3,9 +3,11 @@ package handlers
 import "github.com/Turgho/barberfast/backend/models/repositories"
 
 func InitHandlers(
-	clienteRepo *repositories.ClientesRepository,
+	usuarioRepo *repositories.UsuariosRepository,
 	servicosRepo *repositories.ServicoRepository,
+	agendamentoRepo *repositories.AgendamentosRepository,
 ) {
-	InitClientesRepository(clienteRepo)
+	InitUsuariosRepository(usuarioRepo)
 	InitServicosRepository(servicosRepo)
+	InitAgendamentoRepository(agendamentoRepo)
 }
