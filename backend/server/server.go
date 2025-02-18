@@ -1,7 +1,7 @@
 package server
 
 import (
-	"fmt"
+	"log"
 
 	"github.com/Turgho/barberfast/backend/handlers"
 	"github.com/Turgho/barberfast/backend/migration"
@@ -15,7 +15,8 @@ func InitServer() {
 	// Conecta ao DB
 	dbHandler, err := settings.DBConnect()
 	if err != nil {
-		fmt.Printf("erro ao conectar ao DB: %v", err)
+		log.Fatal("erro ao conectar ao DB:", err)
+		return
 	}
 	defer dbHandler.Close()
 
@@ -23,13 +24,15 @@ func InitServer() {
 	migration.InitMigrations(dbHandler.DB)
 
 	// Inicia Repositories
-	clienteRepo := repositories.NewClientesRepository(dbHandler.DB)
+	clienteRepo := repositories.NewUsuariosRepository(dbHandler.DB)
 	servicoRepo := repositories.NewServicoRepository(dbHandler.DB)
+	agendamentoRepo := repositories.NewAgendamentoRepository(dbHandler.DB)
 
 	// Inicia Handlers
 	handlers.InitHandlers(
 		clienteRepo,
 		servicoRepo,
+		agendamentoRepo,
 	)
 
 	// Inicia o router
@@ -37,7 +40,8 @@ func InitServer() {
 	routes.SetupRoutes(router)
 
 	// Inicia o servidor na porta :8080
-	if err := router.Run(":8080"); err != nil {
-		fmt.Printf("erro ao iniciar ao servidor: %v", err)
+	if err := router.Run(":5050"); err != nil {
+		log.Fatal("erro ao iniciar ao servidor:", err)
+		return
 	}
 }
