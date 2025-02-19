@@ -8,10 +8,14 @@ import (
 	"github.com/Turgho/barberfast/backend/models/repositories"
 	"github.com/Turgho/barberfast/backend/models/settings"
 	"github.com/Turgho/barberfast/backend/routes"
+	"github.com/Turgho/barberfast/backend/services/rabbitmq"
 	"github.com/gin-gonic/gin"
 )
 
 func InitServer() {
+	// Inicia o log da API
+	settings.SetupLogging()
+
 	// Conecta ao DB
 	dbHandler, err := settings.DBConnect()
 	if err != nil {
@@ -34,6 +38,14 @@ func InitServer() {
 		servicoRepo,
 		agendamentoRepo,
 	)
+
+	// Inicia o RabbitMQ
+	if err := rabbitmq.SendMessageToQueue("TESTE MENSAGEM!"); err != nil {
+		log.Fatal("erro ao iniciar RabbitMQ")
+	}
+
+	// Consume mensagens de forma assíncrona em uma goroutine
+	go rabbitmq.ConsumeMessages()
 
 	// Inicia o router
 	router := gin.Default()
