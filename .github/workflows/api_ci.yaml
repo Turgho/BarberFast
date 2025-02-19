@@ -13,20 +13,23 @@ jobs:
     name: Lint e Testes
     runs-on: ubuntu-latest
 
-  steps:
-    - name: Checkout
-      uses: actions/checkout@v4
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
 
-    - name: Config Golang
-      uses: actions/setup-go@v5
-      with:
-        go-version: 1.23
+      - name: Config Golang
+        uses: actions/setup-go@v5
+        with:
+          go-version: 1.23
 
-    - name: Install Dependencies
-      run: go mod tidy
+      - name: Install Dependencies
+        run: go mod tidy
 
-    - name: Verify Code Lint
-      run: go fmt ./...
+      - name: Verify Code Lint
+        run: go fmt ./...
+
+      - name: Run Tests
+        run: go test ./...
 
   build:
     name: App Compiler
@@ -40,10 +43,10 @@ jobs:
       - name: Config Golang
         uses: actions/setup-go@v5
         with:
-          go-version: 1.23
+          go-version: 1.22
 
       - name: Build Binary
-        run: go build -p app ./cmd/main.go
+        run: go build -o app ./cmd/main.go
       
       - name: Binary Cache
         uses: actions/upload-artifact@v4
