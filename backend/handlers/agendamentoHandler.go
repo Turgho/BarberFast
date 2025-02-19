@@ -10,14 +10,16 @@ import (
 
 var agendamentoRepo *repositories.AgendamentosRepository
 
+// InitAgendamentoRepository inicializa o repositório de agendamentos
 func InitAgendamentoRepository(repo *repositories.AgendamentosRepository) {
 	agendamentoRepo = repo
 }
 
+// RegistryAgendamento cria um novo agendamento
 func RegistryAgendamento(ctx *gin.Context) {
 	var agendamento repositories.Agendamentos
 
-	// Verifica se JSON tem erro
+	// Verifica se o JSON está correto
 	if err := ctx.ShouldBindJSON(&agendamento); err != nil {
 		ctx.JSON(http.StatusBadRequest, gin.H{
 			"error": err.Error(),
@@ -25,7 +27,7 @@ func RegistryAgendamento(ctx *gin.Context) {
 		return
 	}
 
-	// Cria um servico no DB
+	// Tenta criar o agendamento no banco de dados
 	if err := agendamentoRepo.CreateAgendamento(&agendamento); err != nil {
 		ctx.JSON(http.StatusInternalServerError, gin.H{
 			"error": err.Error(),
@@ -33,12 +35,13 @@ func RegistryAgendamento(ctx *gin.Context) {
 		return
 	}
 
-	log.Printf("agendamento criado")
+	log.Printf("Agendamento criado com sucesso! ID: %d", agendamento.ID)
 	ctx.JSON(http.StatusOK, gin.H{
 		"id": agendamento.ID,
 	})
 }
 
+// FindAgendamentoById busca um agendamento pelo ID
 func FindAgendamentoById(ctx *gin.Context) {
 	id := ctx.DefaultQuery("id", "")
 	if id == "" {
@@ -50,36 +53,41 @@ func FindAgendamentoById(ctx *gin.Context) {
 
 	agendamento, err := agendamentoRepo.FindAgendamentoById(id)
 	if err != nil {
+		log.Printf("Erro ao buscar agendamento com ID %s: %v", id, err)
 		ctx.JSON(http.StatusNotFound, gin.H{
 			"error": err.Error(),
 		})
-		log.Fatal("erro ao achar cliente:", err)
 		return
 	}
 
-	log.Println("agendamento encontrado!")
+	log.Printf("Agendamento encontrado! ID: %d", agendamento.ID)
 	ctx.JSON(http.StatusOK, agendamento)
 }
 
+// ListAllAgendamentos lista todos os agendamentos com base no critério de pesquisa
 func ListAllAgendamentos(ctx *gin.Context) {
 	pesquisa := ctx.DefaultQuery("pesquisa", "")
 	if pesquisa == "" {
 		ctx.JSON(http.StatusBadRequest, gin.H{
-			"error": "ID não informado",
+			"error": "Tipo de pesquisa não informado",
 		})
 		return
 	}
 
 	allAgendamentos, err := agendamentoRepo.ListAllAgendamentos(pesquisa)
 	if err != nil {
+		log.Printf("Erro ao listar agendamentos: %v", err)
 		ctx.JSON(http.StatusBadRequest, gin.H{
 			"error": err.Error(),
 		})
 		return
 	}
+
+	log.Printf("Encontrados %d agendamentos", len(allAgendamentos))
 	ctx.JSON(http.StatusOK, allAgendamentos)
 }
 
+// DeleteAgendamentoById deleta um agendamento pelo ID
 func DeleteAgendamentoById(ctx *gin.Context) {
 	id := ctx.DefaultQuery("id", "")
 	if id == "" {
@@ -90,12 +98,15 @@ func DeleteAgendamentoById(ctx *gin.Context) {
 	}
 
 	if err := agendamentoRepo.DeleteAgendamentoById(id); err != nil {
+		log.Printf("Erro ao deletar agendamento com ID %s: %v", id, err)
 		ctx.JSON(http.StatusBadRequest, gin.H{
 			"error": err.Error(),
 		})
 		return
 	}
+
+	log.Printf("Agendamento com ID %s deletado com sucesso!", id)
 	ctx.JSON(http.StatusOK, gin.H{
-		"message": "agendamento deletado!",
+		"message": "Agendamento deletado com sucesso!",
 	})
 }

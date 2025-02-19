@@ -1,7 +1,6 @@
 package migration
 
 import (
-	"fmt"
 	"log"
 
 	"github.com/Turgho/barberfast/backend/models/repositories"
@@ -20,5 +19,5 @@ func InitMigrations(db *gorm.DB) {
 		return
 	}
 
-	fmt.Println("Migrações feitas!")
+	log.Println("Migrações de tabelas feitas!")
 }

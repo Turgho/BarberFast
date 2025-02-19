@@ -1,7 +1,6 @@
 package handlers
 
 import (
-	"fmt"
 	"log"
 	"net/http"
 
@@ -16,24 +15,27 @@ func InitUsuariosRepository(repo *repositories.UsuariosRepository) {
 	usuariosRepo = repo
 }
 
+// Handler para registrar um novo usuário
 func RegistryUsuario(ctx *gin.Context) {
 	var usuario repositories.Usuarios
 
 	// Verifica se JSON tem erro
 	if err := ctx.ShouldBindJSON(&usuario); err != nil {
+		log.Printf("Erro ao fazer bind de dados de usuário: %v", err)
 		ctx.JSON(http.StatusBadRequest, gin.H{
-			"error": err.Error(),
+			"error": "Dados inválidos",
 		})
 		return
 	}
 
 	// Criptografa a senha do usuário antes de salvar
-
 	hashedSenha, err := security.HashPassword(usuario.Senha)
 	if err != nil {
+		log.Printf("Erro ao criptografar senha do usuário: %v", err)
 		ctx.JSON(http.StatusInternalServerError, gin.H{
-			"error": err.Error(),
+			"error": "Erro ao processar a senha",
 		})
+		return
 	}
 
 	// Atribui a senha criptografada ao usuário
@@ -41,18 +43,20 @@ func RegistryUsuario(ctx *gin.Context) {
 
 	// Cria um cliente no DB
 	if err := usuariosRepo.CreateUsuario(&usuario); err != nil {
+		log.Printf("Erro ao criar usuário no banco de dados: %v", err)
 		ctx.JSON(http.StatusInternalServerError, gin.H{
-			"error": err.Error(),
+			"error": "Erro ao criar usuário",
 		})
 		return
 	}
 
-	fmt.Println("cliente criado")
+	log.Printf("Usuário criado com sucesso! ID: %d", usuario.ID)
 	ctx.JSON(http.StatusCreated, gin.H{
 		"id": usuario.ID,
 	})
 }
 
+// Handler para buscar um usuário pelo ID
 func FindUsuarioById(ctx *gin.Context) {
 	id := ctx.DefaultQuery("id", "")
 	if id == "" {
@@ -62,31 +66,35 @@ func FindUsuarioById(ctx *gin.Context) {
 		return
 	}
 
-	cliente, err := usuariosRepo.FindUsuarioById(id)
+	usuario, err := usuariosRepo.FindUsuarioById(id)
 	if err != nil {
+		log.Printf("Erro ao buscar usuário com ID %s: %v", id, err)
 		ctx.JSON(http.StatusNotFound, gin.H{
-			"error": err.Error(),
+			"error": "Usuário não encontrado",
 		})
-		log.Fatal("erro ao achar usuario:", err)
 		return
 	}
 
-	fmt.Println("cliente encontrado!")
-	ctx.JSON(http.StatusOK, cliente)
+	log.Printf("Usuário encontrado! ID: %d", usuario.ID)
+	ctx.JSON(http.StatusOK, usuario)
 }
 
+// Handler para listar todos os usuários
 func ListAllUsuarios(ctx *gin.Context) {
 	allUsuarios, err := usuariosRepo.ListAllUsuarios()
 	if err != nil {
-		ctx.JSON(http.StatusNotFound, gin.H{
-			"error": err.Error(),
+		log.Printf("Erro ao listar usuários: %v", err)
+		ctx.JSON(http.StatusInternalServerError, gin.H{
+			"error": "Erro ao listar usuários",
 		})
-		log.Fatal("erro ao achar usuários:", err)
 		return
 	}
+
+	log.Printf("Total de usuários encontrados: %d", len(allUsuarios))
 	ctx.JSON(http.StatusOK, allUsuarios)
 }
 
+// Handler para deletar um usuário pelo ID
 func DeleteUsuario(ctx *gin.Context) {
 	id := ctx.DefaultQuery("id", "")
 	if id == "" {
@@ -97,14 +105,15 @@ func DeleteUsuario(ctx *gin.Context) {
 	}
 
 	if err := usuariosRepo.DeleteUsuarioById(id); err != nil {
+		log.Printf("Erro ao deletar usuário com ID %s: %v", id, err)
 		ctx.JSON(http.StatusBadRequest, gin.H{
-			"error": err.Error(),
+			"error": "Erro ao deletar usuário",
 		})
-		log.Fatal("erro ao deletar usuário:", err)
 		return
 	}
 
+	log.Printf("Usuário com ID %s deletado com sucesso", id)
 	ctx.JSON(http.StatusOK, gin.H{
-		"message": "usuário deletado!",
+		"message": "Usuário deletado com sucesso!",
 	})
 }

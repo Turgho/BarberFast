@@ -1,7 +1,13 @@
 package main
 
-import "github.com/Turgho/barberfast/backend/server"
+import (
+	"log"
+
+	"github.com/Turgho/barberfast/backend/server"
+)
 
 func main() {
 	server.InitServer()
+
+	log.Println("API INICIADA!")
 }
