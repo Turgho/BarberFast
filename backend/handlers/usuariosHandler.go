@@ -1,8 +1,10 @@
 package handlers
 
 import (
+	"fmt"
 	"log"
 	"net/http"
+	"strconv"
 
 	"github.com/Turgho/barberfast/backend/models/repositories"
 	"github.com/Turgho/barberfast/backend/services/security"
@@ -13,6 +15,18 @@ var usuariosRepo *repositories.UsuariosRepository
 
 func InitUsuariosRepository(repo *repositories.UsuariosRepository) {
 	usuariosRepo = repo
+}
+
+func getIDFromQuery(ctx *gin.Context) (uint64, error) {
+	idStr := ctx.DefaultQuery("id", "") // Pega o parâmetro 'id' da query string
+	if idStr == "" {
+		return 0, fmt.Errorf("ID não encontrado na query string")
+	}
+	id, err := strconv.ParseUint(idStr, 10, 64) // Converte para uint64
+	if err != nil {
+		return 0, fmt.Errorf("ID inválido: %s", idStr)
+	}
+	return id, nil
 }
 
 // Handler para registrar um novo usuário
@@ -58,17 +72,19 @@ func RegistryUsuario(ctx *gin.Context) {
 
 // Handler para buscar um usuário pelo ID
 func FindUsuarioById(ctx *gin.Context) {
-	id := ctx.DefaultQuery("id", "")
-	if id == "" {
+	id, err := getIDFromQuery(ctx)
+	if err != nil {
+		log.Printf("Erro ao encontrar parâmetro de ID: %v", err)
 		ctx.JSON(http.StatusBadRequest, gin.H{
-			"error": "ID não informado",
+			"error": "Parâmetro de ID inválido",
 		})
 		return
 	}
 
 	usuario, err := usuariosRepo.FindUsuarioById(id)
 	if err != nil {
-		log.Printf("Erro ao buscar usuário com ID %s: %v", id, err)
+		// Aqui a gente pode verificar se o erro é de "não encontrado" ou outro tipo
+		log.Printf("Erro ao buscar usuário com ID %d: %v", id, err)
 		ctx.JSON(http.StatusNotFound, gin.H{
 			"error": "Usuário não encontrado",
 		})
@@ -96,23 +112,23 @@ func ListAllUsuarios(ctx *gin.Context) {
 
 // Handler para deletar um usuário pelo ID
 func DeleteUsuario(ctx *gin.Context) {
-	id := ctx.DefaultQuery("id", "")
-	if id == "" {
-		ctx.JSON(http.StatusBadRequest, gin.H{
-			"error": "ID não informado",
+	id, err := getIDFromQuery(ctx)
+	if err != nil {
+		log.Printf("Erro ao encontrar parametro de ID: %v", err)
+		ctx.JSON(http.StatusInternalServerError, gin.H{
+			"error": "Parametro não encontrado",
 		})
-		return
 	}
 
 	if err := usuariosRepo.DeleteUsuarioById(id); err != nil {
-		log.Printf("Erro ao deletar usuário com ID %s: %v", id, err)
+		log.Printf("Erro ao deletar usuário com ID %d: %v", id, err)
 		ctx.JSON(http.StatusBadRequest, gin.H{
 			"error": "Erro ao deletar usuário",
 		})
 		return
 	}
 
-	log.Printf("Usuário com ID %s deletado com sucesso", id)
+	log.Printf("Usuário com ID %d deletado com sucesso", id)
 	ctx.JSON(http.StatusOK, gin.H{
 		"message": "Usuário deletado com sucesso!",
 	})
