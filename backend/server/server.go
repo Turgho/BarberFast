@@ -45,7 +45,7 @@ func InitServer() {
 	}
 
 	// Consume mensagens de forma assíncrona em uma goroutine
-	go rabbitmq.ConsumeMessages()
+	// go rabbitmq.ConsumeMessages()
 
 	// Inicia o router
 	router := gin.Default()
