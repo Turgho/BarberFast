@@ -67,14 +67,25 @@ func FindAgendamentoById(ctx *gin.Context) {
 // ListAllAgendamentos lista todos os agendamentos com base no critério de pesquisa
 func ListAllAgendamentos(ctx *gin.Context) {
 	pesquisa := ctx.DefaultQuery("pesquisa", "")
+
 	if pesquisa == "" {
 		ctx.JSON(http.StatusBadRequest, gin.H{
-			"error": "Tipo de pesquisa não informado",
+			"error": "Tipo de pesquisa ou usuário não informado",
 		})
 		return
 	}
 
-	allAgendamentos, err := agendamentoRepo.ListAllAgendamentos(pesquisa)
+	var usuario repositories.Usuarios
+
+	// Verifica se o JSON está correto
+	if err := ctx.ShouldBindJSON(&usuario); err != nil {
+		ctx.JSON(http.StatusBadRequest, gin.H{
+			"error": err.Error(),
+		})
+		return
+	}
+
+	allAgendamentos, err := agendamentoRepo.ListAllAgendamentos(usuario.Nome, pesquisa)
 	if err != nil {
 		log.Printf("Erro ao listar agendamentos: %v", err)
 		ctx.JSON(http.StatusBadRequest, gin.H{
