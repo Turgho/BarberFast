@@ -86,7 +86,7 @@ func (repo *AgendamentosRepository) FindAgendamentoById(agendamentoId string) (*
 }
 
 // Lista todos os agendamentos conforme um critério de pesquisa
-func (repo *AgendamentosRepository) ListAllAgendamentos(tipoPesquisa string) ([]Agendamentos, error) {
+func (repo *AgendamentosRepository) ListAllAgendamentos(nomeUsuario, tipoPesquisa string) ([]Agendamentos, error) {
 	var agendamentos []Agendamentos
 	now := time.Now()
 
@@ -103,6 +103,10 @@ func (repo *AgendamentosRepository) ListAllAgendamentos(tipoPesquisa string) ([]
 		query = query.Where("status = ?", "confirmado")
 	case "cancelado": // Agendamentos cancelados
 		query = query.Where("status = ?", "cancelado")
+	case "nome_cliente":
+		query = query.
+			Joins("INNER JOIN usuarios ON usuarios.id = agendamentos.usuario_id").
+			Where("usuarios.nome LIKE ?", nomeUsuario)
 	default:
 		log.Println("Erro: tipo de pesquisa inválido")
 		return nil, errors.New("tipo de pesquisa inválido")
