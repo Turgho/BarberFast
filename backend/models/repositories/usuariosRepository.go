@@ -50,15 +50,15 @@ func (repo *UsuariosRepository) CreateUsuario(usuario *Usuarios) error {
 
 // Função que busca um usuário pelo seu ID.
 // Recebe o ID como string e retorna um ponteiro para a struct 'Usuarios' ou um erro, caso não encontre.
-func (repo *UsuariosRepository) FindUsuarioById(usuarioId string) (*Usuarios, error) {
+func (repo *UsuariosRepository) FindUsuarioById(usuarioId uint64) (*Usuarios, error) {
 	var usuario Usuarios
 	// Busca o usuário pelo ID
 	result := repo.DB.Where("id = ?", usuarioId).First(&usuario)
 
 	// Se ocorrer erro ao buscar o usuário, loga o erro e retorna um erro.
 	if result.Error != nil {
-		log.Printf("Erro ao buscar usuário por ID: %v, ID: %s", result.Error, usuarioId) // Log de erro com o ID
-		return nil, fmt.Errorf("erro ao achar usuário com ID %s: %w", usuarioId, result.Error)
+		log.Printf("Erro ao buscar usuário por ID: %v, ID: %d", result.Error, usuarioId) // Log de erro com o ID
+		return nil, fmt.Errorf("erro ao achar usuário com ID %d: %w", usuarioId, result.Error)
 	}
 
 	log.Printf("Usuário encontrado: %s (ID: %d)", usuario.Nome, usuario.ID) // Log de sucesso
@@ -87,18 +87,18 @@ func (repo *UsuariosRepository) ListAllUsuarios() ([]Usuarios, error) {
 
 // Função para deletar um usuário pelo ID.
 // Recebe o ID como string e remove o registro correspondente no banco de dados.
-func (repo *UsuariosRepository) DeleteUsuarioById(usuarioId string) error {
+func (repo *UsuariosRepository) DeleteUsuarioById(usuarioId uint64) error {
 	var usuario Usuarios
 	// Deleta o usuário com o ID fornecido
 	result := repo.DB.Where("id = ?", usuarioId).Delete(&usuario)
 
 	// Verifica se ocorreu algum erro ao deletar o usuário
 	if result.Error != nil {
-		log.Printf("Erro ao deletar usuário (ID: %s): %v", usuarioId, result.Error) // Log de erro com o ID
-		return fmt.Errorf("erro ao deletar usuário com ID %s: %w", usuarioId, result.Error)
+		log.Printf("Erro ao deletar usuário (ID: %d): %v", usuarioId, result.Error) // Log de erro com o ID
+		return fmt.Errorf("erro ao deletar usuário com ID %d: %w", usuarioId, result.Error)
 	}
 
-	log.Printf("Usuário com ID %s deletado com sucesso!", usuarioId) // Log de sucesso
+	log.Printf("Usuário com ID %d deletaddo com sucesso!", usuarioId) // Log de sucesso
 	return nil
 }
 
