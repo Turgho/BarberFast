@@ -62,7 +62,8 @@ func Login(ctx *gin.Context) {
 
 	// Retorna o token JWT gerado
 	ctx.JSON(http.StatusOK, gin.H{
-		"message": "Login bem-sucedido",
-		"token":   token,
+		"message":  "Login bem-sucedido",
+		"username": loginInput.Username,
+		"token":    token,
 	})
 }
