@@ -1,0 +1,159 @@
+basePath: /api/v1
+host: localhost:8080
+info:
+  contact: {}
+  description: API para gerenciamento de barbearia
+  title: BarberFast API
+  version: "1.0"
+paths:
+  /v1/admin/cliente:
+    get:
+      description: Retorna os dados de um cliente pelo seu ID
+      parameters:
+      - description: ID do Cliente
+        in: query
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties: true
+            type: object
+        "404":
+          description: Cliente não encontrado
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Buscar cliente por ID
+      tags:
+      - Clientes
+  /v1/admin/clientes:
+    get:
+      description: Obtém uma lista de todos os clientes registrados no sistema
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              additionalProperties: true
+              type: object
+            type: array
+      summary: Lista todos os clientes
+      tags:
+      - Clientes
+  /v1/admin/servicos:
+    get:
+      description: Obtém uma lista de todos os serviços disponíveis
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              additionalProperties: true
+              type: object
+            type: array
+      summary: Listar serviços
+      tags:
+      - Serviços
+    post:
+      consumes:
+      - application/json
+      description: Cadastra um novo serviço na plataforma
+      parameters:
+      - description: Dados do serviço
+        in: body
+        name: servico
+        required: true
+        schema:
+          additionalProperties: true
+          type: object
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Serviço cadastrado com sucesso
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "400":
+          description: Erro ao cadastrar serviço
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Cadastro de serviço
+      tags:
+      - Serviços
+  /v1/login:
+    post:
+      consumes:
+      - application/json
+      description: Autentica um usuário e retorna um token de acesso
+      parameters:
+      - description: Credenciais de login
+        in: body
+        name: login
+        required: true
+        schema:
+          additionalProperties:
+            type: string
+          type: object
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties: true
+            type: object
+        "401":
+          description: Usuário ou senha inválidos
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Autenticação de usuário
+      tags:
+      - Auth
+  /v1/usuario/agendamento:
+    post:
+      consumes:
+      - application/json
+      description: Permite que o usuário marque um horário no sistema
+      parameters:
+      - description: Dados do agendamento
+        in: body
+        name: agendamento
+        required: true
+        schema:
+          additionalProperties: true
+          type: object
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Agendamento criado com sucesso
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "400":
+          description: Erro ao criar agendamento
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Criar agendamento
+      tags:
+      - Agendamentos
+swagger: "2.0"
