@@ -42,13 +42,13 @@ func generateRandomKey(size int) ([]byte, error) {
 
 // GenerateJWT gera um token JWT para um usuário específico
 func GenerateJWT(username string, role bool) (string, error) {
-	// Define o tempo de expiração do token (24 horas a partir de agora)
-	expirationTime := time.Now().Add(24 * time.Hour)
+	// Define o tempo de expiração do token (1 horas a partir de agora)
+	expirationTime := time.Now().Add(1 * time.Hour)
 
 	// Cria as informações (claims) que serão armazenadas no token
 	claims := &Claims{
 		Username: username, // Define o nome do usuário no payload do token
-		Role:     role,
+		Role:     role,     // Define se é usuário é admin
 		RegisteredClaims: jwt.RegisteredClaims{
 			ExpiresAt: jwt.NewNumericDate(expirationTime), // Define a data de expiração
 		},
