@@ -82,6 +82,10 @@ http://localhost:3000
 http://localhost:5050/swagger/index.html
 ```
 
+## 📰 Logs
+
+- Todos os erros são registrados em `Backend/Logs` e `Frontend/Logs`.
+
 ## 📌 Recursos
 - ✅ Cadastro e gerenciamento de clientes e profissionais 
 - ✅ Agendamento online de horários 
