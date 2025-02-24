@@ -2,17 +2,23 @@ package rabbitmq
 
 import (
 	"fmt"
+	"log"
+	"os"
 
 	"github.com/streadway/amqp"
 )
 
 func SendMessageToQueue(message string) error {
 	// Conectar ao RabbitMQ
-	conn, err := amqp.Dial("amqp://guest:guest@localhost:5673/")
+	rabbitmq := os.Getenv("RABBITMQ_URL")
+
+	conn, err := amqp.Dial(rabbitmq)
 	if err != nil {
 		return fmt.Errorf("erro ao conectar ao RabbitMQ: %w", err)
 	}
 	defer conn.Close()
+
+	log.Println("Conectado ao RabbitMQ Server!")
 
 	// Criar um canal de comunicação
 	ch, err := conn.Channel()
