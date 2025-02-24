@@ -15,6 +15,18 @@ func InitServicosRepository(repo *repositories.ServicoRepository) {
 }
 
 // Handler de Registro de Serviço
+
+// RegistryServico registra um novo serviço.
+//
+// @Summary      Cadastro de serviço
+// @Description  Cadastra um novo serviço na plataforma
+// @Tags         Serviços
+// @Accept       json
+// @Produce      json
+// @Param        servico  body  map[string]interface{}  true  "Dados do serviço"
+// @Success      201  {object}  map[string]string  "Serviço cadastrado com sucesso"
+// @Failure      400  {object}  map[string]string  "Erro ao cadastrar serviço"
+// @Router       /v1/admin/servicos [post]
 func RegistryServico(ctx *gin.Context) {
 	var servico repositories.Servicos
 
@@ -66,6 +78,15 @@ func FindServicoById(ctx *gin.Context) {
 }
 
 // Handler de Listagem de Serviços
+
+// ListAllServicos retorna todos os serviços cadastrados.
+//
+// @Summary      Listar serviços
+// @Description  Obtém uma lista de todos os serviços disponíveis
+// @Tags         Serviços
+// @Produce      json
+// @Success      200  {array}  map[string]interface{}
+// @Router       /v1/admin/servicos [get]
 func ListAllServicos(ctx *gin.Context) {
 	servicos, err := servicosRepo.ListAllServicos()
 	if err != nil {
