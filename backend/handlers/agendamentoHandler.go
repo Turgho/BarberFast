@@ -16,6 +16,18 @@ func InitAgendamentoRepository(repo *repositories.AgendamentosRepository) {
 }
 
 // RegistryAgendamento cria um novo agendamento
+
+// RegistryAgendamento cria um novo agendamento.
+//
+// @Summary      Criar agendamento
+// @Description  Permite que o usuário marque um horário no sistema
+// @Tags         Agendamentos
+// @Accept       json
+// @Produce      json
+// @Param        agendamento  body  map[string]interface{}  true  "Dados do agendamento"
+// @Success      201  {object}  map[string]string  "Agendamento criado com sucesso"
+// @Failure      400  {object}  map[string]string  "Erro ao criar agendamento"
+// @Router       /v1/usuario/agendamento [post]
 func RegistryAgendamento(ctx *gin.Context) {
 	var agendamento repositories.Agendamentos
 
