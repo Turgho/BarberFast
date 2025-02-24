@@ -23,6 +23,18 @@ func checkPassword(hashedPassword, password string) bool {
 }
 
 // Handler de Login
+
+// Login autentica um usuário e retorna um token JWT.
+//
+// @Summary      Autenticação de usuário
+// @Description  Autentica um usuário e retorna um token de acesso
+// @Tags         Auth
+// @Accept       json
+// @Produce      json
+// @Param        login  body  map[string]string  true  "Credenciais de login"
+// @Success      200    {object}  map[string]interface{}
+// @Failure      401    {object}  map[string]string "Usuário ou senha inválidos"
+// @Router       /v1/login [post]
 func Login(ctx *gin.Context) {
 	var loginInput LoginInput
 
