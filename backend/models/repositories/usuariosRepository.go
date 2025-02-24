@@ -17,7 +17,7 @@ type Usuarios struct {
 	Email     string    `gorm:"uniqueIndex;size:255;not null" json:"email"` // Email do usuário, único no banco
 	Telefone  string    `gorm:"size:14;not null" json:"telefone"`           // Telefone do usuário
 	Senha     string    `gorm:"not null" json:"senha"`                      // Senha do usuário (não exibida no JSON)
-	IsAdmin   bool      `gorm:"default:false;not null" json:"is_admin"`     // Indica se o usuário é admin
+	IsAdmin   bool      `gorm:"default:false;not null"`                     // Indica se o usuário é admin
 	CreatedAt time.Time `gorm:"autoCreateTime" json:"created_at"`           // Data de criação do registro
 	UpdatedAt time.Time `gorm:"autoUpdateTime" json:"updated_at"`           // Data de atualização do registro
 }
@@ -36,14 +36,31 @@ func NewUsuariosRepository(db *gorm.DB) *UsuariosRepository {
 // Função responsável por criar um novo usuário no banco de dados.
 // Ela recebe um ponteiro para a struct 'Usuarios' e a insere na tabela correspondente.
 func (repo *UsuariosRepository) CreateUsuario(usuario *Usuarios) error {
+	// Verifica se o email já existe no banco antes de tentar criar o usuário
+	var existingUsuario Usuarios
+
+	result := repo.DB.Where("email = ?", usuario.Email).First(&existingUsuario)
+
+	if result.Error == nil {
+		// Se o resultado for nil, significa que o email já está no banco
+		log.Printf("erro: email já cadastrado. email: %s", usuario.Email)
+		return fmt.Errorf("o email %s já está cadastrado", usuario.Email)
+
+	} else if result.Error != gorm.ErrRecordNotFound {
+		// Caso tenha ocorrido outro erro
+		log.Printf("Erro ao verificar o email: %v", result.Error)
+		return fmt.Errorf("erro ao verificar o email: %v", result.Error)
+	}
+
 	// Cria o novo usuário no banco
-	result := repo.DB.Create(&usuario)
+	result = repo.DB.Create(&usuario)
 
 	// Verifica se ocorreu algum erro ao criar o usuário
 	if result.Error != nil {
 		log.Printf("Erro ao criar usuário: %v, Dados do Usuário: %v", result.Error, usuario) // Log de erro com contexto
-		return errors.New("erro ao criar usuário")
+		return fmt.Errorf("erro ao criar usuário: %v", result.Error)
 	}
+
 	log.Printf("Usuário criado com sucesso! Nome: %s, ID: %d", usuario.Nome, usuario.ID) // Log de sucesso
 	return nil
 }
@@ -52,6 +69,7 @@ func (repo *UsuariosRepository) CreateUsuario(usuario *Usuarios) error {
 // Recebe o ID como string e retorna um ponteiro para a struct 'Usuarios' ou um erro, caso não encontre.
 func (repo *UsuariosRepository) FindUsuarioById(usuarioId uint64) (*Usuarios, error) {
 	var usuario Usuarios
+
 	// Busca o usuário pelo ID
 	result := repo.DB.Where("id = ?", usuarioId).First(&usuario)
 
@@ -89,6 +107,7 @@ func (repo *UsuariosRepository) ListAllUsuarios() ([]Usuarios, error) {
 // Recebe o ID como string e remove o registro correspondente no banco de dados.
 func (repo *UsuariosRepository) DeleteUsuarioById(usuarioId uint64) error {
 	var usuario Usuarios
+
 	// Deleta o usuário com o ID fornecido
 	result := repo.DB.Where("id = ?", usuarioId).Delete(&usuario)
 
