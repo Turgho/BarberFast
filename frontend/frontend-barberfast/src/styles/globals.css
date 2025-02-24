@@ -1,0 +1,59 @@
+@import url('https://fonts.googleapis.com/css2?family=Archivo+Black&family=Archivo:ital,wght@0,100..900;1,100..900&family=Julius+Sans+One&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --background: #ffffff;
+  --foreground: #171717;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --background: #0a0a0a;
+    --foreground: #ededed;
+  }
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  color: var(--foreground);
+  background: var(--background);
+  font-family: 'Julius Sans One', sans-serif;
+}
+
+.links a {
+  font-family: 'Julius Sans One', sans-serif;
+}
+
+.textos p {
+  font-family: 'Archivo', sans-serif;
+}
+
+.agendar button {
+  font-family: 'Archivo Black', sans-serif;
+}
+
+span {
+  font-family: 'Archivo Black', sans-serif;
+}
+
+/* Cor dos bullets normais */
+.swiper-pagination-bullet {
+  background-color: white !important; /* Muda a cor padrão */
+  opacity: 0.6 !important;
+  transition: all 500ms ease-in-out;
+}
+
+/* Cor do bullet ativo */
+.swiper-pagination-bullet-active {
+  width: 12px !important;
+  height: 12px !important;
+  size: 100px !important;
+  background-color: #ff6600 !important; /* Cor laranja */
+  opacity: 1 !important;
+}
