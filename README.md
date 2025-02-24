@@ -72,12 +72,12 @@ npm install
 npm run dev
 ```
 
-### Acessando o Site
+### 5️⃣ Acessando o Site
 ```sh
 http://localhost:3000
 ```
 
-### Acessando a documentação
+### 6️⃣ Acessando a documentação
 ```sh
 http://localhost:5050/swagger/index.html
 ```
