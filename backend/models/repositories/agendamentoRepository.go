@@ -6,6 +6,7 @@ import (
 	"log"
 	"time"
 
+	"github.com/gin-gonic/gin"
 	"gorm.io/gorm"
 )
 
@@ -13,11 +14,13 @@ import (
 // Contém informações sobre o cliente, serviço, horários e status do agendamento
 type Agendamentos struct {
 	ID         uint64    `gorm:"primaryKey" json:"id"`
-	UsuarioID  uint64    `gorm:"not null" json:"cliente_id"`
+	UsuarioID  string    `gorm:"not null" json:"usuario_id"` // Referência para o ID do usuário (UUID como string)
 	ServicoID  uint64    `gorm:"not null" json:"servico_id"`
 	DataInicio time.Time `gorm:"not null" json:"data_inicio"`
 	DataFim    time.Time `gorm:"not null" json:"data_fim"`
 	Status     string    `gorm:"not null" json:"status"` // Exemplo: "confirmado", "cancelado"
+	CreatedAt  time.Time `gorm:"autoCreateTime" json:"created_at"`
+	UpdatedAt  time.Time `gorm:"autoUpdateTime" json:"updated_at"`
 
 	// Relacionamentos
 	Usuario Usuarios `gorm:"foreignKey:UsuarioID;constraint:OnDelete:CASCADE" json:"usuario"`
@@ -48,8 +51,10 @@ func (repo *AgendamentosRepository) CreateAgendamento(agendamento *Agendamentos)
 	// Verifica se a data está dentro do horário comercial permitido
 	weekday := agendamento.DataInicio.Weekday()
 	hour := agendamento.DataInicio.Hour()
+
+	// Verificação de horário comercial para segunda a sexta das 9h às 17h e sábado das 8h às 13h
 	if (weekday >= time.Monday && weekday <= time.Friday && (hour < 9 || hour >= 17)) ||
-		(weekday == time.Saturday && (hour < 8 || hour >= 13)) {
+		(weekday != time.Saturday && (hour < 8 || hour >= 13)) {
 		log.Println("Erro: agendamentos permitidos somente de segunda a sexta das 9h às 17h e aos sábados das 8h às 13h")
 		return errors.New("agendamentos permitidos somente de segunda a sexta das 9h às 17h e aos sábados das 8h às 13h")
 	}
@@ -132,4 +137,61 @@ func (repo *AgendamentosRepository) DeleteAgendamentoById(agendamentoId string) 
 
 	log.Printf("Agendamento com ID %s deletado com sucesso!", agendamentoId)
 	return nil
+}
+
+// Lista todos os agendamentos conforme um critério de pesquisa
+func (repo *AgendamentosRepository) ListAgendamentosCliente(ctx *gin.Context, idUsuario, status, ordenacao string) ([]Agendamentos, error) {
+	var agendamentos []Agendamentos
+
+	// Mapeia os filtros disponíveis
+	filtros := map[string]string{
+		"confirmado": "status = 'confirmado'",
+		"cancelado":  "status = 'cancelado'",
+	}
+
+	// Mapeia a ordenação
+	ordenacoes := map[string]string{
+		"recente":  "data_inicio ASC",
+		"distante": "data_inicio DESC",
+	}
+
+	// Inicia a query carregando a relação com `Servico`
+	query := repo.DB.WithContext(ctx).Preload("Servico").Where("usuario_id = ?", idUsuario)
+
+	// Aplica filtro de status se necessário
+	if filtro, existe := filtros[status]; existe {
+		query = query.Where(filtro)
+	}
+
+	// Aplica ordenação se necessário
+	if ordenacao, existe := ordenacoes[ordenacao]; existe {
+		query = query.Order(ordenacao)
+	}
+
+	// Executa a busca
+	if err := query.Find(&agendamentos).Error; err != nil {
+		log.Printf("Erro ao buscar agendamentos: %v", err)
+		return nil, fmt.Errorf("erro ao buscar agendamentos: %w", err)
+	}
+
+	log.Printf("Agendamentos encontrados: %d", len(agendamentos))
+	return agendamentos, nil
+}
+
+// Atualiza os agendamentos que passaram do horário
+func AtualizarAgendamentosConcluidos(db *gorm.DB) {
+	for {
+		time.Sleep(5 * time.Minute) // Define a frequência da verificação
+
+		// Atualiza os registros onde a data_fim já passou
+		result := db.Model(&Agendamentos{}).
+			Where("status <> ? AND data_fim <= ?", "confirmado", time.Now()).
+			Update("status", "concluido")
+
+		if result.Error != nil {
+			log.Printf("Erro ao atualizar agendamentos: %v", result.Error)
+		} else {
+			log.Printf("Agendamentos concluídos atualizados: %d", result.RowsAffected)
+		}
+	}
 }
