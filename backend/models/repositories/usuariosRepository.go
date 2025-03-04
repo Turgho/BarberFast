@@ -1,25 +1,31 @@
 package repositories
 
 import (
-	"errors"
 	"fmt"
 	"log"
 	"time"
 
+	"github.com/google/uuid"
 	"gorm.io/gorm"
 )
 
 // Definição do modelo de dados para a tabela 'usuarios'
 // 'Usuarios' mapeia as colunas do banco de dados com as propriedades do struct.
 type Usuarios struct {
-	ID        uint64    `gorm:"primaryKey;autoIncrement" json:"id"`         // Chave primária e autoincremento
-	Nome      string    `gorm:"size:255;not null" json:"nome"`              // Nome do usuário
-	Email     string    `gorm:"uniqueIndex;size:255;not null" json:"email"` // Email do usuário, único no banco
-	Telefone  string    `gorm:"size:14;not null" json:"telefone"`           // Telefone do usuário
-	Senha     string    `gorm:"not null" json:"senha"`                      // Senha do usuário (não exibida no JSON)
-	IsAdmin   bool      `gorm:"default:false;not null"`                     // Indica se o usuário é admin
-	CreatedAt time.Time `gorm:"autoCreateTime" json:"created_at"`           // Data de criação do registro
-	UpdatedAt time.Time `gorm:"autoUpdateTime" json:"updated_at"`           // Data de atualização do registro
+	ID        string    `gorm:"primaryKey;size:36" json:"id"` // Armazenando UUID como string
+	Nome      string    `gorm:"size:255;not null" json:"nome"`
+	Email     string    `gorm:"uniqueIndex;size:255;not null" json:"email"`
+	Telefone  string    `gorm:"size:14;not null" json:"telefone"`
+	Senha     string    `gorm:"not null" json:"senha"`
+	IsAdmin   bool      `gorm:"default:false;not null" json:"is_admin"`
+	CreatedAt time.Time `gorm:"autoCreateTime" json:"created_at"`
+	UpdatedAt time.Time `gorm:"autoUpdateTime" json:"updated_at"`
+}
+
+// GerarUUID para gerar o UUID antes de salvar
+func (u *Usuarios) BeforeCreate(tx *gorm.DB) (err error) {
+	u.ID = uuid.New().String() // Gera um UUID antes de criar o usuário
+	return nil
 }
 
 // Definição do repositório para 'Usuarios', com um campo DB para o acesso ao banco de dados.
@@ -61,25 +67,28 @@ func (repo *UsuariosRepository) CreateUsuario(usuario *Usuarios) error {
 		return fmt.Errorf("erro ao criar usuário: %v", result.Error)
 	}
 
-	log.Printf("Usuário criado com sucesso! Nome: %s, ID: %d", usuario.Nome, usuario.ID) // Log de sucesso
+	log.Printf("Usuário criado com sucesso! Nome: %s, ID: %s", usuario.Nome, usuario.ID) // Log de sucesso
 	return nil
 }
 
 // Função que busca um usuário pelo seu ID.
 // Recebe o ID como string e retorna um ponteiro para a struct 'Usuarios' ou um erro, caso não encontre.
-func (repo *UsuariosRepository) FindUsuarioById(usuarioId uint64) (*Usuarios, error) {
+func (repo *UsuariosRepository) FindUsuarioById(usuarioId string) (*Usuarios, error) {
 	var usuario Usuarios
 
 	// Busca o usuário pelo ID
-	result := repo.DB.Where("id = ?", usuarioId).First(&usuario)
+	result := repo.DB.
+		Select("nome", "email", "tefelone").
+		Where("id = ?", usuarioId).
+		First(&usuario)
 
 	// Se ocorrer erro ao buscar o usuário, loga o erro e retorna um erro.
 	if result.Error != nil {
-		log.Printf("Erro ao buscar usuário por ID: %v, ID: %d", result.Error, usuarioId) // Log de erro com o ID
-		return nil, fmt.Errorf("erro ao achar usuário com ID %d: %w", usuarioId, result.Error)
+		log.Printf("Erro ao buscar usuário por ID: %v, ID: %s", result.Error, usuarioId) // Log de erro com o ID
+		return nil, fmt.Errorf("erro ao achar usuário com ID %s: %w", usuarioId, result.Error)
 	}
 
-	log.Printf("Usuário encontrado: %s (ID: %d)", usuario.Nome, usuario.ID) // Log de sucesso
+	log.Printf("Usuário encontrado: %s (ID: %s)", usuario.Nome, usuario.ID) // Log de sucesso
 	return &usuario, nil
 }
 
@@ -87,25 +96,27 @@ func (repo *UsuariosRepository) FindUsuarioById(usuarioId uint64) (*Usuarios, er
 // Retorna uma slice de 'Usuarios' ou um erro caso ocorra algum problema.
 func (repo *UsuariosRepository) ListAllUsuarios() ([]Usuarios, error) {
 	var allUsuarios []Usuarios
-	// Seleciona os usuários e ordena pelo nome, retornando apenas os campos necessários
-	result := repo.DB.Order("nome ASC").Find(&allUsuarios)
 
-	// Verifica se ocorreu algum erro ao buscar os usuários
+	// Busca os usuários no banco e retorna apenas os campos necessários
+	result := repo.DB.
+		Model(&Usuarios{}).
+		Select("nome", "email", "telefone").
+		Order("nome ASC").
+		Find(&allUsuarios)
+
+	// Se houver erro, retorna
 	if result.Error != nil {
-		log.Printf("Erro ao buscar usuários: %v", result.Error) // Log de erro
+		log.Printf("Erro ao buscar usuários: %v", result.Error)
 		return nil, fmt.Errorf("erro ao buscar usuários: %w", result.Error)
-	} else if result.RowsAffected == 0 {
-		log.Println("Nenhum usuário encontrado.") // Log quando não encontra usuários
-		return nil, errors.New("nenhum usuário encontrado")
 	}
 
-	log.Printf("Foram encontrados %d usuários.", len(allUsuarios)) // Log de sucesso
+	log.Printf("Foram encontrados %d usuários.", len(allUsuarios))
 	return allUsuarios, nil
 }
 
 // Função para deletar um usuário pelo ID.
 // Recebe o ID como string e remove o registro correspondente no banco de dados.
-func (repo *UsuariosRepository) DeleteUsuarioById(usuarioId uint64) error {
+func (repo *UsuariosRepository) DeleteUsuarioById(usuarioId string) error {
 	var usuario Usuarios
 
 	// Deleta o usuário com o ID fornecido
@@ -113,26 +124,26 @@ func (repo *UsuariosRepository) DeleteUsuarioById(usuarioId uint64) error {
 
 	// Verifica se ocorreu algum erro ao deletar o usuário
 	if result.Error != nil {
-		log.Printf("Erro ao deletar usuário (ID: %d): %v", usuarioId, result.Error) // Log de erro com o ID
-		return fmt.Errorf("erro ao deletar usuário com ID %d: %w", usuarioId, result.Error)
+		log.Printf("Erro ao deletar usuário (ID: %s): %v", usuarioId, result.Error) // Log de erro com o ID
+		return fmt.Errorf("erro ao deletar usuário com ID %s: %w", usuarioId, result.Error)
 	}
 
-	log.Printf("Usuário com ID %d deletaddo com sucesso!", usuarioId) // Log de sucesso
+	log.Printf("Usuário com ID %s deletaddo com sucesso!", usuarioId) // Log de sucesso
 	return nil
 }
 
 // Função que busca um usuário pelo nome. Retorna o usuário encontrado ou um erro.
-func (repo *UsuariosRepository) GetUsuarioLogin(nome string) (*Usuarios, error) {
+func (repo *UsuariosRepository) GetUsuarioLogin(email string) (*Usuarios, error) {
 	var usuario Usuarios
 	// Busca o usuário pelo nome
-	result := repo.DB.Where("nome = ?", nome).First(&usuario)
+	result := repo.DB.Where("email = ?", email).First(&usuario)
 
 	// Verifica se houve erro ao buscar o usuário
 	if result.Error != nil {
-		log.Printf("Erro ao buscar usuário pelo nome: %v, Nome: %s", result.Error, nome) // Log de erro com o nome
-		return nil, fmt.Errorf("erro ao achar usuário com nome %s: %w", nome, result.Error)
+		log.Printf("Erro ao buscar usuário pelo email: %v, Email: %s", result.Error, email) // Log de erro com o nome
+		return nil, fmt.Errorf("erro ao achar usuário com email %s: %w", email, result.Error)
 	}
 
-	log.Printf("Usuário encontrado: %s (ID: %d)", usuario.Nome, usuario.ID) // Log de sucesso
+	log.Printf("Usuário encontrado: %s (ID: %s)", usuario.Nome, usuario.ID) // Log de sucesso
 	return &usuario, nil
 }
