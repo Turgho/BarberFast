@@ -110,6 +110,49 @@ func ListAllAgendamentos(ctx *gin.Context) {
 	ctx.JSON(http.StatusOK, allAgendamentos)
 }
 
+// ListAllAgendamentos lista todos os agendamentos com base no critério de pesquisa
+func ListAgendamentosCliente(ctx *gin.Context) {
+	// Obtém os parâmetros da URL
+	ordenacao := ctx.DefaultQuery("ordenacao", "")
+	status := ctx.DefaultQuery("status", "")
+
+	// Garante que pelo menos um critério seja informado
+	if ordenacao == "" && status == "" {
+		ctx.JSON(http.StatusBadRequest, gin.H{
+			"error": "É necessário informar pelo menos 'status' ou 'ordenacao'",
+		})
+		return
+	}
+
+	// Verifica se o método é POST (caso precise do JSON)
+	var usuario repositories.Usuarios
+	if ctx.Request.Method == http.MethodPost {
+		if err := ctx.ShouldBindJSON(&usuario); err != nil {
+			ctx.JSON(http.StatusBadRequest, gin.H{"error": "JSON inválido: " + err.Error()})
+			return
+		}
+	} else {
+		usuario.ID = ctx.Query("usuario_id") // Busca via query string para GET
+	}
+
+	// Valida se o ID do usuário foi passado
+	if usuario.ID == "" {
+		ctx.JSON(http.StatusBadRequest, gin.H{"error": "ID do usuário não informado"})
+		return
+	}
+
+	// Busca os agendamentos
+	agendamentos, err := agendamentoRepo.ListAgendamentosCliente(ctx, usuario.ID, status, ordenacao)
+	if err != nil {
+		log.Printf("Erro ao listar agendamentos: %v", err)
+		ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	log.Printf("Encontrados %d agendamentos", len(agendamentos))
+	ctx.JSON(http.StatusOK, agendamentos)
+}
+
 // DeleteAgendamentoById deleta um agendamento pelo ID
 func DeleteAgendamentoById(ctx *gin.Context) {
 	id := ctx.DefaultQuery("id", "")
