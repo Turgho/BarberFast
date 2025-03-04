@@ -23,7 +23,8 @@ export default {
         'home-2': 'url(/images/home-2.jpg)',
         'home-3': 'url(/images/home-3.jpg)',
         'precos': 'url(/images/precos.jpg)',
-        'cadastro': 'url(/images/cadastro.jpg)'
+        'cadastro': 'url(/images/cadastro.jpg)',
+        'login': 'url(/images/login.jpg)'
       },
       fontFamily: {
         'julius': ["'Julius Sans One'", "sans serif"],
