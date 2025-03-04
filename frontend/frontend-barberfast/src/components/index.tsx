@@ -19,10 +19,10 @@ export default function Index(){
                         </p>
                     </div>
                     <div className="agendar flex flex-col justify-center items-center gap-2">
-                        <Link href={`/cadastro`}>
+                        <Link href={`/agendar`}>
                             <Button text="AGENDAR!" variant="primary" size="lg"/>
                         </Link>
-                        <Link href="/cadastro" className="underline underline-offset-2 text-[70%]">Já é cliente? Faça login</Link>
+                        <Link href="/login" className="underline underline-offset-2 text-[70%]">Já é cliente? Faça login</Link>
                     </div>
                 </div>
  
