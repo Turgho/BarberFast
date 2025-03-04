@@ -41,7 +41,7 @@ func SetupRoutes(r *gin.Engine) {
 
 			// Rotas de serviços
 			admin.POST("/servicos", handlers.RegistryServico)
-			admin.GET("/servicos", handlers.ListAllServicos)
+			admin.GET("/servicos", handlers.ListAllServicosAdmin)
 			admin.GET("/servico", handlers.FindServicoById)
 			admin.DELETE("/servico", handlers.DeleteServicoById)
 
@@ -54,7 +54,9 @@ func SetupRoutes(r *gin.Engine) {
 		// Rotas para usuários comuns
 		usuario := v1.Group("/usuario")
 		{ // Ajuste para singular
-			usuario.POST("/agendamento", handlers.RegistryAgendamento) // Ajuste para singular
+			usuario.POST("/agendar", handlers.RegistryAgendamento)
+			usuario.GET("/servicos", handlers.ListAllServicosCliente)
+			usuario.POST("/agendamentos", handlers.ListAgendamentosCliente)
 		}
 	}
 }
