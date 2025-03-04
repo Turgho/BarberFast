@@ -10,8 +10,8 @@ import (
 
 var servicosRepo *repositories.ServicoRepository
 
-func InitServicosRepository(repo *repositories.ServicoRepository) {
-	servicosRepo = repo
+func InitServicosRepository(repoServicos *repositories.ServicoRepository) {
+	servicosRepo = repoServicos
 }
 
 // Handler de Registro de Serviço
@@ -87,13 +87,27 @@ func FindServicoById(ctx *gin.Context) {
 // @Produce      json
 // @Success      200  {array}  map[string]interface{}
 // @Router       /v1/admin/servicos [get]
-func ListAllServicos(ctx *gin.Context) {
+// Função para listar serviços (admin)
+func ListAllServicosAdmin(ctx *gin.Context) {
+	// Chama o repositório para listar todos os serviços para o admin
 	servicos, err := servicosRepo.ListAllServicos()
 	if err != nil {
 		log.Printf("Erro ao listar serviços: %v", err)
-		ctx.JSON(http.StatusInternalServerError, gin.H{
-			"error": err.Error(),
-		})
+		ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	log.Printf("Total de serviços encontrados: %d", len(servicos))
+	ctx.JSON(http.StatusOK, servicos)
+}
+
+// Função para listar serviços (cliente)
+func ListAllServicosCliente(ctx *gin.Context) {
+	// Chama o repositório para listar apenas os serviços disponíveis para clientes
+	servicos, err := servicosRepo.ListServicosDisponiveis()
+	if err != nil {
+		log.Printf("Erro ao listar serviços: %v", err)
+		ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
 
