@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"log"
 	"net/http"
-	"strconv"
 
 	"github.com/Turgho/barberfast/backend/models/repositories"
 	"github.com/Turgho/barberfast/backend/services/security"
@@ -17,15 +16,12 @@ func InitUsuariosRepository(repo *repositories.UsuariosRepository) {
 	usuariosRepo = repo
 }
 
-func getIDFromQuery(ctx *gin.Context) (uint64, error) {
-	idStr := ctx.DefaultQuery("id", "") // Pega o parâmetro 'id' da query string
-	if idStr == "" {
-		return 0, fmt.Errorf("ID não encontrado na query string")
+func getIDFromQuery(ctx *gin.Context) (string, error) {
+	id := ctx.DefaultQuery("id", "") // Pega o parâmetro 'id' da query string
+	if id == "" {
+		return "", fmt.Errorf("ID não encontrado na query string")
 	}
-	id, err := strconv.ParseUint(idStr, 10, 64) // Converte para uint64
-	if err != nil {
-		return 0, fmt.Errorf("ID inválido: %s", idStr)
-	}
+
 	return id, nil
 }
 
@@ -64,7 +60,7 @@ func RegistryUsuario(ctx *gin.Context) {
 		return
 	}
 
-	log.Printf("Usuário criado com sucesso! ID: %d", usuario.ID)
+	log.Printf("Usuário criado com sucesso! ID: %s", usuario.ID)
 	ctx.JSON(http.StatusCreated, gin.H{
 		"id": usuario.ID,
 	})
@@ -95,14 +91,14 @@ func FindUsuarioById(ctx *gin.Context) {
 	usuario, err := usuariosRepo.FindUsuarioById(id)
 	if err != nil {
 		// Aqui a gente pode verificar se o erro é de "não encontrado" ou outro tipo
-		log.Printf("Erro ao buscar usuário com ID %d: %v", id, err)
+		log.Printf("Erro ao buscar usuário com ID %s: %v", id, err)
 		ctx.JSON(http.StatusNotFound, gin.H{
 			"message": err.Error(),
 		})
 		return
 	}
 
-	log.Printf("Usuário encontrado! ID: %d", usuario.ID)
+	log.Printf("Usuário encontrado! ID: %s", usuario.ID)
 	ctx.JSON(http.StatusFound, usuario)
 }
 
@@ -141,14 +137,14 @@ func DeleteUsuario(ctx *gin.Context) {
 	}
 
 	if err := usuariosRepo.DeleteUsuarioById(id); err != nil {
-		log.Printf("Erro ao deletar usuário com ID %d: %v", id, err)
+		log.Printf("Erro ao deletar usuário com ID %s: %v", id, err)
 		ctx.JSON(http.StatusBadRequest, gin.H{
 			"error": err.Error(),
 		})
 		return
 	}
 
-	log.Printf("Usuário com ID %d deletado com sucesso", id)
+	log.Printf("Usuário com ID %s deletado com sucesso", id)
 	ctx.JSON(http.StatusOK, gin.H{
 		"message": "Usuário deletado com sucesso!",
 	})
