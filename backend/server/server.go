@@ -47,6 +47,8 @@ func InitServer() {
 	// Consume mensagens de forma assíncrona em uma goroutine
 	// go rabbitmq.ConsumeMessages()
 
+	go repositories.AtualizarAgendamentosConcluidos(dbHandler.DB)
+
 	// Inicia o router
 	router := gin.Default()
 	routes.SetupRoutes(router)
