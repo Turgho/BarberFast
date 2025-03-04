@@ -11,14 +11,14 @@ import (
 
 // Estrutura de Login (username e password)
 type LoginInput struct {
-	Username string `json:"username" binding:"required"`
-	Password string `json:"password" binding:"required"`
+	Email string `json:"email" binding:"required"`
+	Senha string `json:"senha" binding:"required"`
 }
 
 // Função para verificar se a senha fornecida corresponde ao hash
-func checkPassword(hashedPassword, password string) bool {
+func checkPassword(hashedPassword, senha string) bool {
 	// Compara o hash da senha fornecida com o hash armazenado
-	err := bcrypt.CompareHashAndPassword([]byte(hashedPassword), []byte(password))
+	err := bcrypt.CompareHashAndPassword([]byte(hashedPassword), []byte(senha))
 	return err == nil
 }
 
@@ -46,9 +46,9 @@ func Login(ctx *gin.Context) {
 	}
 
 	// Busca o usuário no repositório
-	usuario, err := usuariosRepo.GetUsuarioLogin(loginInput.Username)
+	usuario, err := usuariosRepo.GetUsuarioLogin(loginInput.Email)
 	if err != nil {
-		log.Printf("Usuário não encontrado: %s", loginInput.Username)
+		log.Printf("Usuário não encontrado: %s", loginInput.Email)
 		ctx.JSON(http.StatusBadRequest, gin.H{
 			"error": "Usuário não encontrado",
 		})
@@ -56,26 +56,27 @@ func Login(ctx *gin.Context) {
 	}
 
 	// Verifica se a senha fornecida corresponde ao hash da senha armazenada
-	if loginInput.Username != usuario.Nome || !checkPassword(usuario.Senha, loginInput.Password) {
-		log.Printf("Falha de login para o usuário: %s", loginInput.Username)
+	if loginInput.Email != usuario.Email || !checkPassword(usuario.Senha, loginInput.Senha) {
+		log.Printf("Falha de login para o usuário: %s", loginInput.Email)
 		ctx.JSON(http.StatusUnauthorized, gin.H{"error": "Usuário ou senha inválidos"})
 		return
 	}
 
 	// Geração do token JWT
-	token, err := auth.GenerateJWT(loginInput.Username, usuario.IsAdmin)
+	token, err := auth.GenerateJWT(loginInput.Email, usuario.IsAdmin)
 	if err != nil {
-		log.Printf("Erro ao gerar token para o usuário %s: %v", loginInput.Username, err)
+		log.Printf("Erro ao gerar token para o usuário %s: %v", usuario.Nome, err)
 		ctx.JSON(http.StatusInternalServerError, gin.H{"error": "Erro ao gerar o token"})
 		return
 	}
 
-	log.Printf("Login bem-sucedido para o usuário: %s", loginInput.Username)
+	log.Printf("Login bem-sucedido para o usuário: %s", usuario.Nome)
 
 	// Retorna o token JWT gerado
 	ctx.JSON(http.StatusOK, gin.H{
 		"message":  "Login bem-sucedido",
-		"username": loginInput.Username,
+		"user_id":  usuario.ID,
+		"username": usuario.Nome,
 		"token":    token,
 	})
 }
