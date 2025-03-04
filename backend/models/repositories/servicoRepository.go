@@ -15,6 +15,7 @@ type Servicos struct {
 	Descricao     string    `gorm:"size:255;not null" json:"descricao"`
 	Preco         float64   `gorm:"not null" json:"preco"`
 	DuracaoMinima int       `gorm:"not null" json:"duracao_minutos"`
+	Status        string    `gorm:"not null" json:"status"`
 	CreatedAt     time.Time `gorm:"autoCreateTime" json:"created_at"`
 	UpdatedAt     time.Time `gorm:"autoUpdateTime" json:"updated_at"`
 }
@@ -57,6 +58,22 @@ func (repo *ServicoRepository) FindServicoById(servicoId string) (*Servicos, err
 
 	log.Printf("Serviço encontrado: %v", servico)
 	return &servico, nil
+}
+
+func (repo *ServicoRepository) ListServicosDisponiveis() ([]Servicos, error) {
+	var servicos []Servicos
+
+	result := repo.DB.
+		Where("status = ?", "disponivel").
+		Find(&servicos)
+
+	if result.Error != nil {
+		log.Printf("Erro ao listar todos os serviços disponiveis: %v", result.Error)
+		return nil, errors.New("erro ao listar todos os serviços disponiveis")
+	}
+
+	log.Printf("Serviços disponiveis encontrados: %v", len(servicos))
+	return servicos, nil
 }
 
 // ListAllServicos lista todos os serviços disponíveis no banco de dados.
