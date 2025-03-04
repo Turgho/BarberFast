@@ -1,6 +1,5 @@
 import Navbar from "@/components/navbar";
 import "@/styles/globals.css";
-import Link from "next/link";
 import { useState } from "react";
 import { useRouter } from 'next/router'; // Importando o useRouter
 
@@ -103,7 +102,7 @@ export default function Cadastro() {
                 
                 // Esperar 3 segundos e redirecionar para a página de agendamento
                 setTimeout(() => {
-                    router.push("/");
+                    router.push("/agendar");
                 }, 3000); // Redireciona após 3 segundos
             } else {
                 // Se a resposta não for ok (erro), trata os erros
